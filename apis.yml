@@ -20,10 +20,16 @@ description: >-
   data entry. The product sits on top of a team's existing sales stack and
   reports outcomes including higher playbook adoption, dramatically higher CRM
   fill rates, and a large reduction in post-call admin work. Winn.ai is a
-  privately held company backed by Insight Partners. As of this enrichment pass
-  the company exposes a product web application and a Vanta-hosted trust center
-  (SOC 2, ISO 27001, GDPR) but publishes no public developer API, SDKs,
-  webhooks, or specification surface.
+  privately held company backed by Insight Partners. WINN.AI sells API access as
+  an Enterprise-plan feature ("Get conversation data and AI insights, in any
+  tool") and runs a live, undocumented remote Model Context Protocol server at
+  https://app.winn.ai/mcp, discovered through the RFC 9728 OAuth
+  protected-resource metadata it publishes; the endpoint is gated by OAuth 2.0
+  authorization code with PKCE and advertises a single read-only scope,
+  sessions:read. There is no developer portal, API reference, OpenAPI document,
+  SDK, CLI, webhook catalog, status page or changelog, and both pricing tiers are
+  sales-gated. The company operates a Vanta-hosted trust center covering SOC 2,
+  ISO 27001 and GDPR.
 url: https://raw.githubusercontent.com/api-evangelist/winnai/refs/heads/main/apis.yml
 x-type: company
 x-source: vc-portfolio
@@ -33,7 +39,7 @@ x-tier: stub
 x-tier-reason: portfolio-lead
 specificationVersion: '0.20'
 created: '2026-07-17'
-modified: '2026-07-21'
+modified: '2026-08-13'
 tags:
 - Company
 - Sales
@@ -43,7 +49,35 @@ tags:
 - Sales Enablement
 - Conversation Intelligence
 - Productivity
-apis: []
+apis:
+- aid: winnai:mcp
+  name: WINN.AI MCP API
+  description: >-
+    A live remote Model Context Protocol endpoint serving WINN.AI conversation
+    data to agents. It is published nowhere on the company's website — it was
+    found by probing RFC 9728 OAuth protected-resource metadata on the product
+    application host, which names https://app.winn.ai/mcp as the protected
+    resource. Every anonymous JSON-RPC call, including initialize and tools/list,
+    returns HTTP 401 {"error":"Missing credential"}, so the tool set is not
+    public. Access is bearer-token-only via OAuth 2.0 authorization code with
+    PKCE (S256), with dynamic client registration supported, and the sole
+    advertised scope is read-only (sessions:read). Commercially this is the
+    Enterprise-tier "API access" feature, reached through sales rather than
+    signup.
+  humanURL: https://winn.ai/pricing/
+  baseURL: https://app.winn.ai/mcp
+  tags:
+  - MCP
+  - Agents
+  - Conversation Intelligence
+  - Sales
+  properties:
+  - type: MCPServer
+    url: mcp/winnai-mcp.yml
+  - type: Authentication
+    url: authentication/winnai-authentication.yml
+  - type: OAuthScopes
+    url: scopes/winnai-scopes.yml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
@@ -66,8 +100,32 @@ common:
   url: https://trust.winn.ai/
 - type: DomainSecurity
   url: security/winnai-domain-security.yml
+- type: Support
+  url: https://winn.ai/support/
+- type: MCPServer
+  url: mcp/winnai-mcp.yml
+- type: WellKnown
+  url: well-known/winnai-well-known.yml
+- type: Authentication
+  url: authentication/winnai-authentication.yml
+- type: OAuthScopes
+  url: scopes/winnai-scopes.yml
+- type: RateLimits
+  url: rate-limits/winnai-rate-limits.yml
+- type: ErrorCatalog
+  url: errors/winnai-problem-types.yml
+- type: Conventions
+  url: conventions/winnai-conventions.yml
+- type: Lifecycle
+  url: lifecycle/winnai-lifecycle.yml
+- type: Conformance
+  url: conformance/winnai-conformance.yml
+- type: Plans
+  url: plans/winnai-plans-pricing.yml
+- type: LLMsTxt
+  url: llms/winnai-llms.txt
 x-enrichment:
-  date: '2026-07-21'
-  status: minimal
-  artifacts_added: 2
+  date: '2026-08-13'
+  status: enriched
+  artifacts_added: 15
   pass: local-v1
