@@ -1,0 +1,153 @@
+generated: '2026-08-13'
+method: probed
+source: >-
+  RFC 8414 / RFC 9728 metadata on app.winn.ai and winn.ai, live MCP probes, and
+  https://trust.winn.ai/ (certifications) / https://winn.ai/pricing/ (compliance
+  claims)
+summary: >-
+  WINN.AI's conformance profile is entirely OAuth- and MCP-shaped. It implements
+  the modern OAuth discovery stack correctly enough for an MCP client to bootstrap
+  — with one real gap, the missing WWW-Authenticate challenge — and it holds
+  audited security certifications. It conforms to no API description standard,
+  because it publishes no API description.
+
+standards:
+- id: oauth2
+  name: OAuth 2.0 (RFC 6749)
+  conforms: true
+  evidence: >-
+    Authorization code and refresh_token grants advertised in
+    grant_types_supported by both authorization servers; bearer tokens accepted in
+    the Authorization header.
+  source: https://app.winn.ai/.well-known/oauth-authorization-server
+
+- id: oauth2-pkce
+  name: PKCE (RFC 7636)
+  conforms: true
+  evidence: 'code_challenge_methods_supported: ["S256"] on both authorization servers. S256 only; plain is not offered.'
+  source: https://app.winn.ai/.well-known/oauth-authorization-server
+
+- id: oauth2-as-metadata
+  name: OAuth 2.0 Authorization Server Metadata (RFC 8414)
+  conforms: true
+  evidence: >-
+    /.well-known/oauth-authorization-server returns HTTP 200 with a valid metadata
+    document on both app.winn.ai and winn.ai.
+  source: https://app.winn.ai/.well-known/oauth-authorization-server
+
+- id: oauth2-protected-resource-metadata
+  name: OAuth 2.0 Protected Resource Metadata (RFC 9728)
+  conforms: partial
+  evidence: >-
+    The metadata document is served correctly at
+    /.well-known/oauth-protected-resource on both hosts and names its resource and
+    authorization server. However the protected resource itself returns HTTP 401
+    WITHOUT a WWW-Authenticate header carrying resource_metadata, which RFC 9728
+    §5.1 specifies as the discovery path from the challenge. Discovery therefore
+    only works for a client that already guesses the well-known path.
+  source: https://app.winn.ai/.well-known/oauth-protected-resource
+
+- id: oauth2-dcr
+  name: OAuth 2.0 Dynamic Client Registration (RFC 7591)
+  conforms: true
+  evidence: >-
+    registration_endpoint https://app.winn.ai/api/auth/oauth/register advertised by
+    the product authorization server, with token_endpoint_auth_methods_supported
+    ["none"] (public clients). The WordPress server instead advertises
+    client_id_metadata_document_supported.
+  source: https://app.winn.ai/.well-known/oauth-authorization-server
+
+- id: mcp
+  name: Model Context Protocol
+  conforms: partial
+  evidence: >-
+    A live remote MCP endpoint at https://app.winn.ai/mcp accepts JSON-RPC 2.0
+    POSTs over Streamable HTTP and is wired to the RFC 9728/8414 authorization
+    stack the MCP authorization spec prescribes. Two deviations were observed: the
+    401 carries no WWW-Authenticate header, and the rejection body is a flat
+    {"error":"..."} object rather than a JSON-RPC error object. Tool-level
+    conformance could not be assessed — tools/list is auth-gated.
+  source: https://app.winn.ai/mcp
+
+- id: oidc
+  name: OpenID Connect Discovery
+  conforms: false
+  evidence: >-
+    /.well-known/openid-configuration returns HTTP 404 on www.winn.ai and the SPA
+    HTML shell on app.winn.ai. Neither authorization server advertises OIDC
+    metadata or an id_token response type.
+
+- id: openapi
+  name: OpenAPI
+  conforms: false
+  evidence: >-
+    No OpenAPI or Swagger document is served on any WINN.AI host. Probed
+    /openapi.json, /openapi.yaml, /swagger.json, /v1/openapi.json, /api-docs,
+    /api/openapi.json, /api/swagger.json, /api/v1/openapi.json, /redoc and
+    /api-json against www.winn.ai and app.winn.ai — all 404, SPA shell, or
+    bearer-gated 401.
+
+- id: asyncapi
+  name: AsyncAPI
+  conforms: false
+  evidence: No event, streaming or webhook specification is published; no webhook catalog exists in the docs.
+
+- id: rfc9457
+  name: Problem Details for HTTP APIs (RFC 9457)
+  conforms: false
+  evidence: >-
+    Two vendor error envelopes are served and neither uses
+    application/problem+json. See errors/winnai-problem-types.yml.
+
+- id: rfc9116
+  name: security.txt (RFC 9116)
+  conforms: false
+  evidence: /.well-known/security.txt returns HTTP 404 on www.winn.ai and the SPA shell on app.winn.ai.
+
+- id: a2a
+  name: A2A Agent Card
+  conforms: false
+  evidence: >-
+    /.well-known/agent-card.json and /.well-known/agent.json return HTTP 404 on
+    www.winn.ai and winnai.dev, and the SPA HTML shell (not an AgentCard) on
+    app.winn.ai. No card exists.
+
+certifications:
+- id: soc2
+  name: SOC 2
+  conforms: true
+  evidence: Listed on the Vanta-hosted trust center and repeated on the pricing page as "SOC-2".
+  source: https://trust.winn.ai/
+- id: iso27001
+  name: ISO/IEC 27001
+  conforms: true
+  evidence: Listed on the trust center and on the pricing page.
+  source: https://trust.winn.ai/
+- id: gdpr
+  name: GDPR
+  conforms: true
+  evidence: >-
+    Listed on the trust center and the pricing page; WINN.AI also publishes a Data
+    Processing Addendum at https://winn.ai/dpa/.
+  source: https://trust.winn.ai/
+
+x-evidence:
+- url: https://app.winn.ai/.well-known/oauth-authorization-server
+  http_status: 200
+- url: https://app.winn.ai/.well-known/oauth-protected-resource
+  http_status: 200
+- url: https://winn.ai/.well-known/oauth-authorization-server
+  http_status: 200
+- url: https://app.winn.ai/mcp
+  http_status: 401
+- url: https://www.winn.ai/openapi.json
+  http_status: 404
+- url: https://app.winn.ai/api/v1/openapi.json
+  http_status: 401
+- url: https://trust.winn.ai/
+  http_status: 403
+  note: >-
+    Vanta trust centers block automated clients; the certification list was read
+    in an earlier pass and is restated on https://winn.ai/pricing/ (HTTP 200),
+    which is the citable public source used here.
+checked: '2026-08-13'

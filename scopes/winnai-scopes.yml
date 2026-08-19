@@ -1,0 +1,44 @@
+generated: '2026-08-13'
+method: probed
+source: >-
+  scopes_supported in https://app.winn.ai/.well-known/oauth-authorization-server
+  and https://winn.ai/.well-known/oauth-authorization-server
+docs: null
+docs_note: >-
+  WINN.AI publishes no scopes or permissions reference page. Every scope below was
+  read verbatim from RFC 8414 authorization server metadata. No description text
+  is published by the provider for any of them, so the description fields record
+  what the scope name plainly denotes and say so.
+
+scope_count: 2
+scopes:
+- name: sessions:read
+  authorization_server: https://app.winn.ai
+  resource: https://app.winn.ai/mcp
+  description: >-
+    Read access to call sessions. Provider publishes no description; the name is
+    recorded verbatim from scopes_supported. It is consistent with the Enterprise
+    plan's stated "API access: Get conversation data and AI insights, in any
+    tool".
+  read_write: read
+  provider_described: false
+- name: mcp
+  authorization_server: https://winn.ai
+  resource: https://winn.ai/wp-json/mcp/mcp-oauth-server
+  description: >-
+    Single coarse scope for the WordPress MCP Adapter surface on the marketing
+    site's CMS. Provider publishes no description. Not a product API scope.
+  read_write: unknown
+  provider_described: false
+  product_surface: false
+
+observations:
+- The product authorization server advertises exactly one scope, and it is
+  read-only. No write scope is published, which is consistent with a
+  conversation-data export surface rather than a full CRUD API.
+- Scope granularity is coarse-to-nonexistent on the WordPress server (a single
+  "mcp" scope covers the whole surface).
+
+related:
+- authentication/winnai-authentication.yml
+- mcp/winnai-mcp.yml

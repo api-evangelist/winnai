@@ -1,0 +1,77 @@
+generated: '2026-08-13'
+method: searched
+source: https://winn.ai/pricing/
+currency: null
+billing_period: null
+public_pricing: false
+public_pricing_note: >-
+  WINN.AI publishes named tiers and their feature contents but no prices. Both
+  tiers carry a "Talk to sales" call to action, so no amount, currency, billing
+  period, included quota or overage rate is available on any public page. There is
+  no self-serve checkout and no machine-readable pricing endpoint.
+
+plan_count: 2
+plans:
+- name: Pro
+  price: null
+  currency: null
+  billing_period: null
+  cta: Talk to sales
+  seat_minimum: null
+  api_access: false
+  included:
+  - Real-time playbook guidance (MEDDPICC, SPICED, BANT and more)
+  - Live answers connected to your knowledge base
+  - AI-powered battle cards
+  - Live AI coaching
+  - In-call CRM visibility
+  - 35+ smart AI talking points
+  - Automated CRM update (up to 25 fields)
+  - Smart call summaries and follow-up emails
+  - AI meeting prep, next steps, and tasks
+  - Automated Slack updates
+  - Ask anything across your calls (single call or all calls)
+  - Custom AI insights and signals
+  - Industry-leading security and compliance (SOC-2, ISO 27001, GDPR)
+  limits:
+  - field: CRM fields written
+    value: 25
+    note: '"Automated CRM update — Up to 25 fields", verbatim from the pricing page.'
+- name: Enterprise
+  price: null
+  currency: null
+  billing_period: null
+  cta: Talk to sales
+  seat_minimum: 20
+  api_access: true
+  api_access_text: 'API access — Get conversation data and AI insights, in any tool'
+  included:
+  - Everything in Pro
+  - Unlimited custom AI talking points
+  - Custom playbooks (any call, segment, product, and stage)
+  - Advanced CRM updates (unlimited fields, custom objects, opportunity creation)
+  - Slack Deal Rooms
+  - Reporting and analytics
+  - Leadership Dashboard
+  - SAML SSO with Okta
+  - Dedicated account manager and 24/6 support
+  - API access
+  limits:
+  - field: seats
+    value: 20
+    comparator: minimum
+    note: '"Minimum 20 seats", verbatim from the pricing page.'
+  - field: CRM fields written
+    value: unlimited
+
+api_gating: >-
+  API access is an Enterprise-only, sales-gated feature. This is the single most
+  important commercial fact about WINN.AI's API surface: the MCP endpoint at
+  https://app.winn.ai/mcp is live and its OAuth metadata is public, but the right
+  to use it is sold, not signed up for, and there is no published developer plan,
+  free tier, trial, or usage-based rate.
+
+x-evidence:
+- url: https://winn.ai/pricing/
+  http_status: 200
+  fetched: '2026-08-13'

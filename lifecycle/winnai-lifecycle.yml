@@ -1,0 +1,91 @@
+generated: '2026-08-13'
+method: probed
+source: >-
+  Live probes of winn.ai, app.winn.ai and candidate status hosts; page inventory
+  from https://winn.ai/sitemap_index.xml
+summary: >-
+  WINN.AI publishes none of the operational lifecycle surface an API consumer
+  depends on. There is no status page, no changelog, no versioning policy, no
+  deprecation policy and no published SLA. This file records those absences with
+  the probes that established them, so the gap is evidenced rather than assumed.
+
+versioning:
+  scheme: uri-path
+  current_version: v1
+  evidence: >-
+    Paths under https://app.winn.ai/api/v1/ are routed and return the
+    authenticated 401 envelope. This is the only version signal WINN.AI emits.
+  policy_published: false
+  policy_url: null
+
+deprecation:
+  policy_published: false
+  policy_url: null
+  sunset_header: false
+  deprecation_header: false
+  rfc8594: false
+  note: >-
+    No deprecation policy page exists, and no Sunset or Deprecation header was
+    returned on any probed response. No Deprecation pointer was emitted.
+
+status_page:
+  present: false
+  url: null
+  probes:
+  - url: https://status.winn.ai/
+    status: 000
+    note: does not resolve (no DNS A record)
+  - url: https://winn.statuspage.io/
+    status: 200
+    note: >-
+      NOT a status page. Redirects to
+      https://www.atlassian.com/software/statuspage — the Statuspage marketing
+      site, which is what Atlassian serves for an unclaimed subdomain. Treated as
+      a miss.
+  - url: https://winnai.statuspage.io/
+    status: 200
+    note: Same Atlassian marketing redirect. Treated as a miss.
+  note: >-
+    No status page was found on any candidate host and none is linked from
+    winn.ai/support/ or the site footer. No StatusPage pointer was emitted.
+
+changelog:
+  present: false
+  url: null
+  note: >-
+    The Yoast sitemap index lists only page, use_cases, section and case_study
+    sitemaps — there is no post sitemap, no blog, and no release-notes or
+    changelog page anywhere in the 42-page site inventory.
+
+sla:
+  published: false
+  note: >-
+    No uptime or availability commitment is published. The pricing page offers
+    "Dedicated account manager and 24/6 support" on the Enterprise tier, which is
+    a support-hours commitment, not an SLA.
+
+support:
+  channel: email
+  url: https://winn.ai/support/
+  contact: support@winn.ai
+  note: >-
+    winn.ai/support/ is a contact page. There is no help center, no community
+    forum and no developer support channel.
+
+deprecated_operations: []
+deprecated_operations_note: >-
+  Cannot be derived. No OpenAPI is published and the MCP tool list is auth-gated,
+  so there is no operation inventory to mark deprecations against.
+
+x-evidence:
+- url: https://winn.ai/sitemap_index.xml
+  http_status: 200
+- url: https://winn.ai/page-sitemap.xml
+  http_status: 200
+- url: https://status.winn.ai/
+  http_status: 0
+- url: https://winn.statuspage.io/
+  http_status: 200
+- url: https://winn.ai/support/
+  http_status: 200
+checked: '2026-08-13'

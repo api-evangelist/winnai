@@ -1,0 +1,119 @@
+generated: '2026-08-13'
+method: probed
+source: >-
+  Live 401 responses observed on https://app.winn.ai/mcp and
+  https://app.winn.ai/api/* on 2026-08-13
+docs: null
+docs_note: >-
+  WINN.AI publishes no error reference. This catalog contains only error responses
+  actually observed on the wire. It is deliberately short: with every endpoint
+  bearer-gated, 401 is the only status an unauthenticated probe can reach. No 4xx
+  or 5xx beyond that is guessed.
+
+format: vendor
+rfc9457: false
+format_note: >-
+  Two different vendor envelopes are served from the same host depending on the
+  surface. Neither uses application/problem+json.
+
+envelopes:
+- id: mcp-flat
+  surface: https://app.winn.ai/mcp
+  content_type: application/json; charset=utf-8
+  schema:
+    error: string
+  example: '{"error":"Missing credential"}'
+- id: rest-nest
+  surface: https://app.winn.ai/api/**
+  content_type: application/json; charset=utf-8
+  schema:
+    statusCode: integer
+    timestamp: string (ISO 8601, UTC)
+    path: string
+    message: string
+  example: '{"statusCode":401,"timestamp":"2026-08-14T02:24:23Z","path":"/api/v1/sessions","message":"Unauthorized"}'
+- id: wordpress-rest
+  surface: https://winn.ai/wp-json/**
+  content_type: application/json
+  schema:
+    code: string
+    message: string
+    data:
+      status: integer
+  example: '{"code":"mcp_unauthorized","message":"MCP authentication required.","data":{"status":401}}'
+  note: WordPress REST API envelope on the marketing site CMS, not the product API.
+
+problem_type_count: 4
+problem_types:
+- id: missing-credential
+  status: 401
+  envelope: mcp-flat
+  message: Missing credential
+  meaning: >-
+    The MCP request carried no Authorization header. Returned for every JSON-RPC
+    method including initialize and tools/list.
+  remediation: >-
+    Obtain an OAuth access token from https://app.winn.ai/api/auth/oauth/token via
+    authorization code + PKCE and send it as a Bearer header.
+  observed: true
+  x-evidence:
+    url: https://app.winn.ai/mcp
+    method: POST
+    http_status: 401
+    fetched: '2026-08-13'
+- id: unauthorized
+  status: 401
+  envelope: rest-nest
+  message: Unauthorized
+  meaning: >-
+    The REST request under /api carried no valid bearer token. Returned uniformly
+    for every probed path, including paths that do not exist — the auth guard runs
+    ahead of routing, so a 401 here does not prove the endpoint exists.
+  remediation: Present a valid bearer token.
+  observed: true
+  x-evidence:
+    url: https://app.winn.ai/api/v1/sessions
+    method: GET
+    http_status: 401
+    fetched: '2026-08-13'
+- id: mcp_unauthorized
+  status: 401
+  envelope: wordpress-rest
+  code: mcp_unauthorized
+  message: MCP authentication required.
+  meaning: The WordPress MCP server rejected an unauthenticated JSON-RPC call.
+  remediation: Authorize against https://winn.ai/oauth/authorize with scope "mcp".
+  observed: true
+  product_surface: false
+  x-evidence:
+    url: https://winn.ai/wp-json/mcp/mcp-oauth-server
+    method: POST
+    http_status: 401
+    fetched: '2026-08-13'
+- id: rest_forbidden
+  status: 401
+  envelope: wordpress-rest
+  code: rest_forbidden
+  message: Sorry, you are not allowed to do that.
+  meaning: >-
+    Standard WordPress REST permission failure, returned by the default MCP
+    adapter route.
+  remediation: Authenticate with a WordPress-issued credential.
+  observed: true
+  product_surface: false
+  x-evidence:
+    url: https://winn.ai/wp-json/mcp/mcp-adapter-default-server
+    method: POST
+    http_status: 401
+    fetched: '2026-08-13'
+
+not_observed:
+  note: >-
+    No 400, 403, 404, 409, 422, 429 or 5xx response was observed. The auth guard
+    short-circuits every request before any other handler runs, so no further
+    error semantics are reachable without a credential. Nothing beyond the four
+    entries above is recorded.
+
+related:
+- conventions/winnai-conventions.yml
+- authentication/winnai-authentication.yml

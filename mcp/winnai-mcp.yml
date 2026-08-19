@@ -1,0 +1,117 @@
+generated: '2026-08-13'
+method: probed
+source: https://app.winn.ai/.well-known/oauth-protected-resource
+name: WINN.AI MCP Server
+description: >-
+  WINN.AI publishes a remote Model Context Protocol endpoint at
+  https://app.winn.ai/mcp. Its existence is not documented on the marketing site
+  or in any developer portal — it was discovered by probing RFC 9728 OAuth
+  protected-resource metadata on the product application host, which names
+  https://app.winn.ai/mcp as the protected resource and https://app.winn.ai as
+  its authorization server. The endpoint is live and answers JSON-RPC, but every
+  anonymous call is rejected, so the tool list could not be enumerated. The
+  single advertised OAuth scope, sessions:read, matches the capability WINN.AI
+  sells on its Enterprise plan — "API access: Get conversation data and AI
+  insights, in any tool" — which indicates a read-only projection of recorded
+  sales-call sessions.
+
+deployment:
+  mode: remote
+  endpoint: https://app.winn.ai/mcp
+  auth: oauth
+  verified: probed
+
+servers:
+- name: WINN.AI product MCP server
+  endpoint: https://app.winn.ai/mcp
+  transport: streamable-http
+  status: live-gated
+  auth:
+    type: oauth2
+    flow: authorization_code
+    pkce: S256
+    issuer: https://app.winn.ai
+    authorization_endpoint: https://app.winn.ai/api/auth/oauth/authorize
+    token_endpoint: https://app.winn.ai/api/auth/oauth/token
+    registration_endpoint: https://app.winn.ai/api/auth/oauth/register
+    dynamic_client_registration: true
+    bearer_methods_supported:
+    - header
+    scopes:
+    - sessions:read
+  x-evidence:
+    fetched: '2026-08-13'
+    discovery_url: https://app.winn.ai/.well-known/oauth-protected-resource
+    discovery_status: 200
+    probe:
+      method: POST
+      url: https://app.winn.ai/mcp
+      body: '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+      http_status: 401
+      content_type: application/json; charset=utf-8
+      response: '{"error":"Missing credential"}'
+    initialize_probe:
+      http_status: 401
+      response: '{"error":"Missing credential"}'
+  notes:
+  - tools/list and initialize both return HTTP 401 anonymously; the live tool set
+    and per-tool inputSchema require an authenticated OAuth token. No tool list is
+    published anywhere else (no llms.txt, no developer docs), so no tool names are
+    recorded here rather than guessed.
+  - The 401 does NOT carry a WWW-Authenticate header pointing at the
+    resource-metadata URL, which RFC 9728 / the MCP authorization spec require for
+    a client to discover the authorization server from the challenge alone. A
+    client must already know to fetch /.well-known/oauth-protected-resource.
+  - Live rate-limit headers are returned on this endpoint even on the 401 — see
+    rate-limits/winnai-rate-limits.yml.
+
+- name: WordPress site MCP server (marketing site CMS)
+  endpoint: https://winn.ai/wp-json/mcp/mcp-oauth-server
+  transport: streamable-http
+  status: live-gated
+  first_party: true
+  product_surface: false
+  auth:
+    type: oauth2
+    flow: authorization_code
+    pkce: S256
+    issuer: https://winn.ai
+    authorization_endpoint: https://winn.ai/oauth/authorize
+    token_endpoint: https://winn.ai/oauth/token
+    revocation_endpoint: https://winn.ai/oauth/revoke
+    client_id_metadata_document_supported: true
+    scopes:
+    - mcp
+  x-evidence:
+    fetched: '2026-08-13'
+    discovery_url: https://winn.ai/.well-known/oauth-protected-resource
+    discovery_status: 200
+    route_index: https://winn.ai/wp-json/mcp/
+    route_index_status: 200
+    probe:
+      method: POST
+      url: https://winn.ai/wp-json/mcp/mcp-oauth-server
+      http_status: 401
+      response: '{"code":"mcp_unauthorized","message":"MCP authentication required.","data":{"status":401}}'
+  notes:
+  - This is the WordPress MCP Adapter plugin running on winn.ai's own marketing
+    site (WP Engine hosted; the wp-json route index lists mcp/mcp-oauth-server and
+    mcp/mcp-adapter-default-server alongside the usual WordPress namespaces). It is
+    genuinely served by a host the company controls, but it exposes the CMS, not
+    the WINN.AI sales product. Recorded separately so it is never mistaken for the
+    product API.
+  - mcp/mcp-adapter-default-server also answers, returning
+    {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}.
+
+tools: []
+tools_note: >-
+  No tools recorded. Both MCP servers reject anonymous tools/list with HTTP 401,
+  and WINN.AI publishes no tool catalog, llms.txt, or OpenAPI from which a tool
+  list could be honestly derived. Enumerating the tools requires an authenticated
+  OAuth token, which this pipeline does not hold and does not obtain.
+
+related:
+- authentication/winnai-authentication.yml
+- scopes/winnai-scopes.yml
+- rate-limits/winnai-rate-limits.yml
+- well-known/winnai-well-known.yml

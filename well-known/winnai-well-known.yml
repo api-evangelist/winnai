@@ -1,0 +1,130 @@
+generated: '2026-08-13'
+method: probed
+source: live HTTP probes of winn.ai, www.winn.ai, app.winn.ai and winnai.dev
+description: >-
+  Results of probing the /.well-known/ discovery surface on every WINN.AI host.
+  Four real documents were retrieved: both winn.ai (the WordPress marketing site)
+  and app.winn.ai (the product application) serve RFC 8414 OAuth authorization
+  server metadata and RFC 9728 OAuth protected-resource metadata, and each names
+  a DIFFERENT MCP endpoint as its protected resource. This is how the product MCP
+  server at https://app.winn.ai/mcp was discovered — it is documented nowhere
+  else. No security.txt, api-catalog, ai-plugin.json, OpenID Connect discovery
+  document or A2A agent card is served on any host. app.winn.ai is a single-page
+  application whose catch-all answers HTTP 200 with a 567-byte HTML shell for
+  every unrouted path, so its 200s on unrouted /.well-known/* paths are recorded
+  as present-but-not-a-real-document and were not saved.
+
+hosts:
+- host: https://app.winn.ai
+  documents:
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    type: application/json
+    file: winnai-app-oauth-authorization-server.json
+    note: >-
+      RFC 8414 authorization server metadata for the product app. Advertises
+      authorization_code + refresh_token, PKCE S256, dynamic client registration,
+      and one scope — sessions:read.
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    type: application/json
+    file: winnai-app-oauth-protected-resource.json
+    note: >-
+      RFC 9728 metadata naming https://app.winn.ai/mcp as the protected resource
+      and https://app.winn.ai as its authorization server.
+  - path: /.well-known/security.txt
+    status: 200
+    type: text/html
+    note: SPA shell, not a real security.txt; not saved.
+  - path: /.well-known/openid-configuration
+    status: 200
+    type: text/html
+    note: SPA shell, not a real OIDC discovery document; not saved.
+  - path: /.well-known/api-catalog
+    status: 200
+    type: text/html
+    note: SPA shell, not a real API catalog; not saved.
+  - path: /.well-known/ai-plugin.json
+    status: 200
+    type: text/html
+    note: SPA shell, not a real ai-plugin manifest; not saved.
+  - path: /.well-known/agent-card.json
+    status: 200
+    type: text/html
+    note: SPA shell, not an A2A AgentCard; rejected and not saved.
+  - path: /.well-known/agent.json
+    status: 200
+    type: text/html
+    note: SPA shell, not an A2A AgentCard; rejected and not saved.
+
+- host: https://winn.ai
+  documents:
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    type: application/json
+    file: winnai-oauth-authorization-server.json
+    note: >-
+      RFC 8414 metadata served by the WordPress site. Scope "mcp"; supports
+      revocation and client_id_metadata_document. www.winn.ai returns a 301 to the
+      apex for this path.
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    type: application/json
+    file: winnai-oauth-protected-resource.json
+    note: >-
+      RFC 9728 metadata naming https://winn.ai/wp-json/mcp/mcp-oauth-server — the
+      WordPress MCP Adapter plugin on the marketing site's CMS, not the product
+      API.
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+
+- host: https://www.winn.ai
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /llms.txt
+    status: 404
+    note: Not a /.well-known/ path; recorded because it drove the generated llms/ artifact.
+
+- host: https://winnai.dev
+  documents:
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    type: application/json
+    note: >-
+      winnai.dev is an alias of the same WordPress install and returns the
+      identical document (resource https://winn.ai/wp-json/mcp/mcp-oauth-server).
+      Not saved a second time.
+  - path: /.well-known/agent-card.json
+    status: 404
+
+security_txt: false
+security_txt_note: >-
+  No security.txt is served on any WINN.AI host — www.winn.ai returns a bare 404
+  and app.winn.ai returns its SPA shell. No SecurityTxt pointer was emitted.
+agent_card: false
+agent_card_note: >-
+  No A2A agent card exists. Every /.well-known/agent-card.json and
+  /.well-known/agent.json probe returned either 404 or the app.winn.ai SPA HTML
+  shell, so no a2a/ artifact and no AgentCard pointer were written.
+checked: '2026-08-13'

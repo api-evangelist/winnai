@@ -1,0 +1,118 @@
+generated: '2026-08-13'
+method: probed
+source: >-
+  Live responses from https://app.winn.ai/mcp and https://app.winn.ai/api/*, plus
+  RFC 8414/9728 metadata on app.winn.ai and winn.ai
+docs: null
+docs_note: >-
+  WINN.AI publishes no API reference, no getting-started guide and no conventions
+  documentation. Everything recorded here was observed on the wire. Fields the
+  provider does not expose anonymously are recorded as unknown rather than
+  inferred.
+
+authentication:
+  style: OAuth 2.0 bearer token in the Authorization header
+  flow: authorization_code with PKCE (S256)
+  public_client: true
+  dynamic_client_registration: true
+  detail: authentication/winnai-authentication.yml
+
+transport:
+  protocol: HTTPS only
+  http_version: HTTP/2
+  hsts: 'max-age=31536000; includeSubDomains'
+  primary_style: JSON-RPC 2.0 over Streamable HTTP (MCP) at https://app.winn.ai/mcp
+  secondary_style: >-
+    A REST-shaped surface exists under https://app.winn.ai/api (paths such as
+    /api/v1/... and /api/auth/oauth/...), but it is entirely bearer-gated and
+    undocumented.
+
+error_envelope:
+  mcp_endpoint:
+    shape: '{"error": "<message>"}'
+    example: '{"error":"Missing credential"}'
+    content_type: application/json; charset=utf-8
+    note: >-
+      Flat single-key object. NOT a JSON-RPC error object — a JSON-RPC server is
+      expected to answer a malformed/unauthorized call with
+      {"jsonrpc":"2.0","id":...,"error":{"code":...,"message":...}}. WINN.AI
+      returns a bare HTTP 401 with a non-JSON-RPC body instead.
+  rest_surface:
+    shape: '{"statusCode": <int>, "timestamp": "<ISO 8601 Z>", "path": "<request path>", "message": "<reason>"}'
+    example: '{"statusCode":401,"timestamp":"2026-08-14T02:24:23Z","path":"/api/v1/sessions","message":"Unauthorized"}'
+    content_type: application/json; charset=utf-8
+    note: >-
+      The NestJS default exception-filter envelope. Consistent across every probed
+      /api path. Includes a server timestamp and echoes the request path, which is
+      useful for support correlation.
+  rfc9457: false
+  rfc9457_note: >-
+    Neither surface uses application/problem+json or any RFC 9457 member (type,
+    title, status, detail, instance). Two different envelopes on two surfaces of
+    the same host is itself the finding.
+  detail: errors/winnai-problem-types.yml
+
+rate_limiting:
+  signalled: true
+  headers:
+  - x-ratelimit-limit-peruser
+  - x-ratelimit-remaining-peruser
+  - x-ratelimit-reset-peruser
+  - x-ratelimit-limit-global
+  - x-ratelimit-remaining-global
+  - x-ratelimit-reset-global
+  reset_semantics: seconds remaining in the window
+  retry_after: false
+  scope: MCP endpoint only; not present on /api responses
+  detail: rate-limits/winnai-rate-limits.yml
+
+idempotency:
+  supported: unknown
+  header: null
+  note: >-
+    No idempotency key header, no idempotency documentation, and no anonymous
+    write path on which to observe one. Recorded as unknown, not as absent, and
+    deliberately NOT wired as an Idempotency pointer — the only advertised scope
+    is read-only (sessions:read), so there may be no write surface to make
+    idempotent at all.
+
+pagination:
+  style: unknown
+  note: No anonymous endpoint returns a collection; nothing observable.
+
+versioning:
+  style: URI path segment
+  evidence: >-
+    Paths under /api/v1/ are routed (they return the authenticated 401 envelope
+    rather than a 404), which indicates a v1 path prefix. No version header, no
+    date-based version, and no published version policy.
+  detail: lifecycle/winnai-lifecycle.yml
+
+request_id_tracing:
+  header: null
+  note: >-
+    No x-request-id or correlation-id header was returned on any probed response.
+    The REST envelope's "timestamp" and "path" fields are the only correlation
+    handles a caller gets. Cloudflare's cf-ray is present but is edge
+    infrastructure, not an application trace ID.
+
+content_negotiation:
+  request: application/json
+  mcp_accept: 'application/json, text/event-stream'
+
+field_expansion: unknown
+sparse_fieldsets: unknown
+metadata_fields: unknown
+
+security_headers:
+  strict_transport_security: 'max-age=31536000; includeSubDomains'
+  content_security_policy: present and strict on app.winn.ai (default-src 'self' plus an explicit allowlist)
+  permissions_policy: 'camera=(), microphone=(), geolocation=(), payment=(), fullscreen=(self)'
+  x_frame_options: enforced via CSP frame-ancestors
+
+related:
+- authentication/winnai-authentication.yml
+- errors/winnai-problem-types.yml
+- rate-limits/winnai-rate-limits.yml
+- lifecycle/winnai-lifecycle.yml
+- mcp/winnai-mcp.yml

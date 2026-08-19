@@ -1,0 +1,81 @@
+generated: '2026-08-13'
+method: probed
+source: >-
+  Response headers observed live on POST https://app.winn.ai/mcp (HTTP 401,
+  2026-08-13)
+docs: null
+docs_note: >-
+  WINN.AI documents no rate limits anywhere on its public site. The limits below
+  were read off real response headers returned by the MCP endpoint, including on
+  unauthenticated 401 responses.
+
+limit_count: 2
+limits:
+- scope: per-user
+  endpoint: https://app.winn.ai/mcp
+  limit: 60
+  window: 60s
+  window_seconds: 60
+  burst: null
+  headers:
+    limit: x-ratelimit-limit-peruser
+    remaining: x-ratelimit-remaining-peruser
+    reset: x-ratelimit-reset-peruser
+  observed:
+    x-ratelimit-limit-peruser: '60'
+    x-ratelimit-remaining-peruser: '59'
+    x-ratelimit-reset-peruser: '60'
+  note: >-
+    Reset is expressed as seconds remaining in the window, not a Unix timestamp.
+    The counter decremented on an anonymous request, so unauthenticated calls are
+    metered too.
+- scope: global
+  endpoint: https://app.winn.ai/mcp
+  limit: 600
+  window: 60s
+  window_seconds: 60
+  burst: null
+  headers:
+    limit: x-ratelimit-limit-global
+    remaining: x-ratelimit-remaining-global
+    reset: x-ratelimit-reset-global
+  observed:
+    x-ratelimit-limit-global: '600'
+    x-ratelimit-remaining-global: '599'
+    x-ratelimit-reset-global: '60'
+
+response_headers:
+- x-ratelimit-limit-peruser
+- x-ratelimit-remaining-peruser
+- x-ratelimit-reset-peruser
+- x-ratelimit-limit-global
+- x-ratelimit-remaining-global
+- x-ratelimit-reset-global
+
+standard_headers: false
+standard_headers_note: >-
+  The headers are the legacy X-RateLimit-* family, not the IETF draft
+  RateLimit/RateLimit-Policy form. No Retry-After header was observed.
+
+exhaustion_status: null
+exhaustion_note: >-
+  Not observed. The pipeline did not exhaust the limit — deliberately probing a
+  provider to 429 is out of scope — so the status code and body returned on
+  exhaustion are unknown. HTTP 429 is the conventional expectation but is not
+  recorded here as fact.
+
+coverage_gap: >-
+  No rate-limit headers were observed on any path under https://app.winn.ai/api
+  (probed /api, /api/v1/sessions and a dozen spec paths, all HTTP 401). The
+  metering signal is present on the MCP endpoint only.
+
+x-evidence:
+- url: https://app.winn.ai/mcp
+  method: POST
+  http_status: 401
+  fetched: '2026-08-13'
+- url: https://app.winn.ai/api/v1/sessions
+  method: GET
+  http_status: 401
+  fetched: '2026-08-13'
+  note: no rate-limit headers returned

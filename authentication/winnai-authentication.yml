@@ -1,0 +1,123 @@
+generated: '2026-08-13'
+method: probed
+source: >-
+  https://app.winn.ai/.well-known/oauth-authorization-server and
+  https://winn.ai/.well-known/oauth-authorization-server (RFC 8414), plus live
+  401 responses from https://app.winn.ai/mcp and https://app.winn.ai/api/*
+docs: null
+docs_note: >-
+  WINN.AI publishes no developer authentication page. The entire auth model below
+  was read from machine-readable OAuth metadata the company serves, not from
+  human documentation.
+
+summary: >-
+  WINN.AI runs two independent OAuth 2.0 authorization servers, one per host. The
+  product application (app.winn.ai) protects its MCP endpoint with authorization
+  code + PKCE and supports dynamic client registration; the marketing site
+  (winn.ai) runs the WordPress MCP plugin's own authorization server. Everything
+  under app.winn.ai/api is bearer-gated with no anonymous surface at all.
+
+schemes:
+- id: winnai-app-oauth2
+  type: oauth2
+  applies_to: https://app.winn.ai/mcp
+  flows:
+    authorization_code:
+      authorization_url: https://app.winn.ai/api/auth/oauth/authorize
+      token_url: https://app.winn.ai/api/auth/oauth/token
+      refresh_supported: true
+      pkce_required_methods:
+      - S256
+      scopes:
+        sessions:read: >-
+          Read access to recorded call sessions. Scope name taken verbatim from
+          scopes_supported in the authorization server metadata; WINN.AI publishes
+          no description for it.
+  token_endpoint_auth_methods_supported:
+  - none
+  public_client: true
+  dynamic_client_registration:
+    supported: true
+    endpoint: https://app.winn.ai/api/auth/oauth/register
+    spec: RFC 7591
+  authorization_response_iss_parameter_supported: true
+  bearer_methods_supported:
+  - header
+  protected_resource_metadata: https://app.winn.ai/.well-known/oauth-protected-resource
+  x-evidence:
+    url: https://app.winn.ai/.well-known/oauth-authorization-server
+    http_status: 200
+    fetched: '2026-08-13'
+
+- id: winnai-wordpress-oauth2
+  type: oauth2
+  applies_to: https://winn.ai/wp-json/mcp/mcp-oauth-server
+  first_party: true
+  product_surface: false
+  flows:
+    authorization_code:
+      authorization_url: https://winn.ai/oauth/authorize
+      token_url: https://winn.ai/oauth/token
+      revocation_url: https://winn.ai/oauth/revoke
+      refresh_supported: true
+      pkce_required_methods:
+      - S256
+      scopes:
+        mcp: >-
+          Single coarse scope covering the WordPress MCP surface. No description
+          published.
+  token_endpoint_auth_methods_supported:
+  - none
+  public_client: true
+  client_id_metadata_document_supported: true
+  bearer_methods_supported:
+  - header
+  x-evidence:
+    url: https://winn.ai/.well-known/oauth-authorization-server
+    http_status: 200
+    fetched: '2026-08-13'
+  note: >-
+    Belongs to the WordPress CMS behind the marketing site, not to the WINN.AI
+    sales product. Kept separate so the product auth model is not overstated.
+
+observed_challenges:
+- url: https://app.winn.ai/mcp
+  method: POST
+  http_status: 401
+  body: '{"error":"Missing credential"}'
+  www_authenticate: null
+  deviation: >-
+    No WWW-Authenticate header is returned, so an MCP client cannot discover the
+    authorization server from the challenge as RFC 9728 and the MCP authorization
+    specification intend. Discovery only works if the client already knows to
+    fetch /.well-known/oauth-protected-resource.
+- url: https://app.winn.ai/api/v1/sessions
+  method: GET
+  http_status: 401
+  body: '{"statusCode":401,"timestamp":"2026-08-14T02:24:23Z","path":"/api/v1/sessions","message":"Unauthorized"}'
+  www_authenticate: null
+  note: >-
+    Every probed path under https://app.winn.ai/api returns this same envelope,
+    including /api, /api/docs, /api/openapi, /api/swagger.json and
+    /api/v1/openapi.json. There is no anonymous endpoint and no unauthenticated
+    spec route.
+
+api_keys: false
+api_keys_note: >-
+  No API key scheme is documented or observed. WINN.AI's pricing page lists "API
+  access" as an Enterprise-tier feature reached through sales, and every observed
+  credential is an OAuth bearer token.
+
+mtls: false
+openid_connect: false
+openid_connect_note: >-
+  /.well-known/openid-configuration returns 404 on www.winn.ai and the SPA shell
+  on app.winn.ai. Neither authorization server advertises OIDC. Note that the
+  pricing page separately advertises SAML SSO with Okta for end-user login on the
+  Enterprise plan — that is workforce SSO into the product, not an API auth
+  scheme, and no SAML metadata is published.
+
+related:
+- scopes/winnai-scopes.yml
+- mcp/winnai-mcp.yml
+- well-known/winnai-well-known.yml
