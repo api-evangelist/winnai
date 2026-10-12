@@ -1,0 +1,18 @@
+generated: '2026-10-12'
+method: none
+source:
+- https://zapier.com/apps/winnai/integrations
+- https://zapier.com/apps/winn-ai/integrations
+- https://n8n.io/integrations/winnai/
+- https://composio.dev/toolkits/winnai
+- https://monid.ai/tools/winnai
+checked:
+- https://composio.dev/toolkits/winnai
+- https://monid.ai/tools/winnai
+- https://n8n.io/integrations/winnai/
+- https://zapier.com/apps/winn-ai/integrations
+- https://zapier.com/apps/winnai/integrations
+summary: null
+marketplace_apps: []
+edges: []
+templates: []
