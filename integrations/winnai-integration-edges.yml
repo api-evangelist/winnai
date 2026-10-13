@@ -1,5 +1,5 @@
 generated: '2026-10-12'
-method: none
+method: searched
 source:
 - https://zapier.com/apps/winnai/integrations
 - https://zapier.com/apps/winn-ai/integrations
@@ -7,6 +7,7 @@ source:
 - https://composio.dev/toolkits/winnai
 - https://monid.ai/tools/winnai
 checked:
+- https://azuremarketplace.microsoft.com/
 - https://composio.dev/toolkits/winnai
 - https://monid.ai/tools/winnai
 - https://n8n.io/integrations/winnai/
@@ -14,5 +15,20 @@ checked:
 - https://zapier.com/apps/winnai/integrations
 summary: null
 marketplace_apps: []
-edges: []
+edges:
+- partner_name: Microsoft Azure Marketplace
+  partner: microsoft-azure
+  partner_match: aggregator
+  type: marketplace
+  marketplace: azure-marketplace
+  channel: distribution
+  relationship: platform-app
+  direction: provider-built
+  evidence: https://azuremarketplace.microsoft.com/en-us/marketplace/apps?search=WINN.AI
+  listing_count: 1
+  apps:
+  - WINN.AI - AI Sales Assistant
+  seller_name: WINN.AI
+  detected_by: sweep-cloud-marketplaces.py
+  detected: '2026-10-13'
 templates: []
